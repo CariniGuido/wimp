@@ -1,40 +1,59 @@
-const Cliente = require('../models/clienteModel');
-
 const clienteController = {
-  getAll: (req, res) => {
-    Cliente.getAll((err, results) => {
-      if (err) return res.status(500).send(err);
-      res.json(results);
-    });
+  getAll: async (req, res) => {
+    try {
+      const clientesSnapshot = await db.collection('clientes').get();
+      const clientes = [];
+      clientesSnapshot.forEach(doc => {
+        clientes.push({ id: doc.id, ...doc.data() });
+      });
+      res.json(clientes);
+    } catch (err) {
+      res.status(500).send(err);
+    }
   },
-  getById: (req, res) => {
-    const { id } = req.params;
-    Cliente.getById(id, (err, result) => {
-      if (err) return res.status(500).send(err);
-      res.json(result);
-    });
+  
+  getById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const clienteDoc = await db.collection('clientes').doc(id).get();
+      if (!clienteDoc.exists) {
+        return res.status(404).send('Cliente no encontrado');
+      }
+      res.json({ id: clienteDoc.id, ...clienteDoc.data() });
+    } catch (err) {
+      res.status(500).send(err);
+    }
   },
-  create: (req, res) => {
-    const data = req.body;
-    Cliente.create(data, (err, result) => {
-      if (err) return res.status(500).send(err);
-      res.json({ id: result.insertId });
-    });
+  
+  create: async (req, res) => {
+    try {
+      const data = req.body;
+      const docRef = await db.collection('clientes').add(data);
+      res.json({ id: docRef.id });
+    } catch (err) {
+      res.status(500).send(err);
+    }
   },
-  update: (req, res) => {
-    const { id } = req.params;
-    const data = req.body;
-    Cliente.update(id, data, (err) => {
-      if (err) return res.status(500).send(err);
+  
+  update: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      await db.collection('clientes').doc(id).set(data, { merge: true });
       res.json({ message: 'Cliente actualizado' });
-    });
+    } catch (err) {
+      res.status(500).send(err);
+    }
   },
-  delete: (req, res) => {
-    const { id } = req.params;
-    Cliente.delete(id, (err) => {
-      if (err) return res.status(500).send(err);
+  
+  delete: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await db.collection('clientes').doc(id).delete();
       res.json({ message: 'Cliente eliminado' });
-    });
+    } catch (err) {
+      res.status(500).send(err);
+    }
   }
 };
 

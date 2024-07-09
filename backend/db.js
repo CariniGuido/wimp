@@ -1,22 +1,18 @@
-const express = require('express');
-const mysql = require('mysql');
-
-const app = express();
+const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 't5vghVfi5]-SO1Mg',
-  database: 'gimnasio'
+  password: '1t5vghVfi5]-SO1Mg', // Actualiza esto con tu nueva contraseña
+  database: 'gimnasio' // Asegúrate de usar el nombre correcto de tu base de datos
 });
 
 connection.connect((err) => {
   if (err) {
-    console.error('Error connecting to MySQL:', err);
+    console.error('Error connecting: ' + err.stack);
     return;
   }
-  console.log('Connected to MySQL server');
+  console.log('Connected as id ' + connection.threadId);
 });
 
-// Resto de la configuración de tu aplicación Express aquí
-
+module.exports = connection;

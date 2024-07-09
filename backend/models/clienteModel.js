@@ -1,25 +1,57 @@
-const db = require('../db');
+const admin = require('firebase-admin');
+const db = admin.firestore();
 
 const Cliente = {
-  getAll: (callback) => {
-    const query = 'SELECT * FROM clientes';
-    db.query(query, callback);
+  getAll: async (callback) => {
+    try {
+      const clientesSnapshot = await db.collection('clientes').get();
+      const clientes = [];
+      clientesSnapshot.forEach((doc) => {
+        clientes.push({ id: doc.id, ...doc.data() });
+      });
+      callback(null, clientes);
+    } catch (err) {
+      callback(err, null);
+    }
   },
-  getById: (id, callback) => {
-    const query = 'SELECT * FROM clientes WHERE id = ?';
-    db.query(query, [id], callback);
+
+  getById: async (id, callback) => {
+    try {
+      const clienteDoc = await db.collection('clientes').doc(id).get();
+      if (!clienteDoc.exists) {
+        return callback('Cliente no encontrado', null);
+      }
+      callback(null, { id: clienteDoc.id, ...clienteDoc.data() });
+    } catch (err) {
+      callback(err, null);
+    }
   },
-  create: (data, callback) => {
-    const query = 'INSERT INTO clientes SET ?';
-    db.query(query, data, callback);
+
+  create: async (data, callback) => {
+    try {
+      const docRef = await db.collection('clientes').add(data);
+      callback(null, { id: docRef.id });
+    } catch (err) {
+      callback(err, null);
+    }
   },
-  update: (id, data, callback) => {
-    const query = 'UPDATE clientes SET ? WHERE id = ?';
-    db.query(query, [data, id], callback);
+
+  update: async (id, data, callback) => {
+    try {
+      await db.collection('clientes').doc(id).set(data, { merge: true });
+      callback(null, { message: 'Cliente actualizado' });
+    } catch (err) {
+      callback(err, null);
+    }
   },
-  delete: (id, callback) => {
-    const query = 'DELETE FROM clientes WHERE id = ?';
-    db.query(query, [id], callback);
+
+  delete: async (id, callback) => {
+    try {
+      await db.collection('clientes').doc(id).delete();
+      callback(null, { message: 'Cliente eliminado' });
+    } catch (err) {
+      callback(err, null);
+    }
   }
 };
 
